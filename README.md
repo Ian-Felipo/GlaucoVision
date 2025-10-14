@@ -1,1 +1,1 @@
-# skin-cancer-image-classification
+# GlaucoVision
