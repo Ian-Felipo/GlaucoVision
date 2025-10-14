@@ -5,7 +5,7 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 import numpy as np
 from tqdm import tqdm
 from data_preparation import load_dataset, create_kfold_loaders
-from models import load_transformer_model
+from model import load_transformer_model
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
