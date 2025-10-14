@@ -61,6 +61,7 @@ def train_one_fold(model, train_loader, val_loader, optimizer, criterion, model_
         print(f"📘 Época {epoch+1}/{epochs} | Loss treino: {train_loss:.4f} | Loss val: {val_loss:.4f}")
         print(f"➡️  ACC={acc*100:.2f}% | PREC={prec*100:.2f}% | REC={rec*100:.2f}% | F1={f1*100:.2f}% | AUC={auc*100:.2f}%")
 
+    # Salva probabilidades e ground truths
     np.save(f"{save_dir}/probs_{model_name}_fold{fold_idx}.npy", np.array(probs))
     np.save(f"{save_dir}/gts_fold{fold_idx}.npy", np.array(gts))
 
@@ -69,57 +70,64 @@ def train_one_fold(model, train_loader, val_loader, optimizer, criterion, model_
 
 def kfold_training(data_root="data", model_name="vit", k_fold=5, epochs=10, lr=1e-4, batch_size=32, save_dir="results"):
     """
-    Executa o treinamento com validação cruzada K-fold para um modelo específico.
+    Executa o treinamento com validação cruzada K-fold para um modelo específico
+    e salva os resultados em um arquivo TXT.
     """
     print(f"\n🚀 Iniciando K-Fold Training ({k_fold} folds) — Modelo: {model_name.upper()}\n")
     dataset = load_dataset(data_root, model_name)
     folds = create_kfold_loaders(dataset, k_fold=k_fold, batch_size=batch_size)
 
+    os.makedirs(save_dir, exist_ok=True)
+    txt_file_path = os.path.join(save_dir, f"results_{model_name}.txt")
+
     all_metrics = []
 
-    for fold_idx, (train_loader, val_loader) in enumerate(folds, start=1):
-        print(f"\n==============================")
-        print(f"🔹 FOLD {fold_idx}/{k_fold} — Treinando modelo {model_name.upper()}")
-        print(f"==============================")
+    with open(txt_file_path, "w") as f:
+        f.write(f"📊 Resultados K-Fold ({k_fold} folds) — Modelo: {model_name.upper()}\n\n")
 
-        _, model = load_transformer_model(model_name, num_classes=2)
-        model.to(DEVICE)
+        for fold_idx, (train_loader, val_loader) in enumerate(folds, start=1):
+            f.write(f"==============================\n")
+            f.write(f"🔹 FOLD {fold_idx}/{k_fold}\n")
+            f.write(f"==============================\n")
 
-        criterion = nn.CrossEntropyLoss()
-        optimizer = torch.optim.AdamW(model.parameters(), lr=lr)
+            _, model = load_transformer_model(model_name, num_classes=2)
+            model.to(DEVICE)
 
-        trained_model, metrics = train_one_fold(
-            model, train_loader, val_loader, optimizer, criterion,
-            model_name, fold_idx, epochs, save_dir
-        )
-        all_metrics.append(metrics)
+            criterion = nn.CrossEntropyLoss()
+            optimizer = torch.optim.AdamW(model.parameters(), lr=lr)
 
-        acc, prec, rec, f1, auc = metrics
-        print(f"\n📊 Resultados do Fold {fold_idx}:")
-        print(f"  Accuracy:     {acc*100:.2f}%")
-        print(f"  Precision:    {prec*100:.2f}%")
-        print(f"  Recall:       {rec*100:.2f}%")
-        print(f"  F1-Score:     {f1*100:.2f}%")
-        print(f"  AUC:          {auc*100:.2f}%")
+            trained_model, metrics = train_one_fold(
+                model, train_loader, val_loader, optimizer, criterion,
+                model_name, fold_idx, epochs, save_dir
+            )
+            all_metrics.append(metrics)
 
-    all_metrics = np.array(all_metrics)
-    mean_metrics = all_metrics.mean(axis=0)
-    std_metrics = all_metrics.std(axis=0)
+            acc, prec, rec, f1, auc = metrics
+            f.write(f"Accuracy:     {acc*100:.2f}%\n")
+            f.write(f"Precision:    {prec*100:.2f}%\n")
+            f.write(f"Recall:       {rec*100:.2f}%\n")
+            f.write(f"F1-Score:     {f1*100:.2f}%\n")
+            f.write(f"AUC:          {auc*100:.2f}%\n\n")
 
-    print(f"\n✅ MÉDIA FINAL ({model_name.upper()} — {k_fold} folds):")
-    print(f"  Accuracy:     {mean_metrics[0]*100:.2f}% ± {std_metrics[0]*100:.2f}%")
-    print(f"  Precision:    {mean_metrics[1]*100:.2f}% ± {std_metrics[1]*100:.2f}%")
-    print(f"  Recall:       {mean_metrics[2]*100:.2f}% ± {std_metrics[2]*100:.2f}%")
-    print(f"  F1-Score:     {mean_metrics[3]*100:.2f}% ± {std_metrics[3]*100:.2f}%")
-    print(f"  AUC:          {mean_metrics[4]*100:.2f}% ± {std_metrics[4]*100:.2f}%")
+        all_metrics = np.array(all_metrics)
+        mean_metrics = all_metrics.mean(axis=0)
+        std_metrics = all_metrics.std(axis=0)
 
+        f.write(f"✅ MÉDIA FINAL ({model_name.upper()} — {k_fold} folds):\n")
+        f.write(f"Accuracy:     {mean_metrics[0]*100:.2f}% ± {std_metrics[0]*100:.2f}%\n")
+        f.write(f"Precision:    {mean_metrics[1]*100:.2f}% ± {std_metrics[1]*100:.2f}%\n")
+        f.write(f"Recall:       {mean_metrics[2]*100:.2f}% ± {std_metrics[2]*100:.2f}%\n")
+        f.write(f"F1-Score:     {mean_metrics[3]*100:.2f}% ± {std_metrics[3]*100:.2f}%\n")
+        f.write(f"AUC:          {mean_metrics[4]*100:.2f}% ± {std_metrics[4]*100:.2f}%\n")
+
+    print(f"\n✅ Resultados salvos em {txt_file_path}")
     return all_metrics
 
 
 def full_experiment(data_root="data", k_fold=5, epochs=10, lr=1e-4, batch_size=32):
     """
     Executa o experimento completo com todos os modelos Transformers.
-    (VIT, DEIT, BEIT, SWINV2)
+    (VIT, DEIT, BEIT, SWINV2) e salva resultados em TXT individual.
     """
     models = ["vit", "deit", "beit", "swinv2"]
     all_results = {}
