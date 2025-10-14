@@ -4,18 +4,21 @@ from torch.utils.data import DataLoader
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
 import numpy as np
 from tqdm import tqdm
+import os
+
 from data_preparation import load_dataset, create_kfold_loaders
 from model import load_transformer_model
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-def train_one_fold(model, train_loader, val_loader, optimizer, criterion, epochs=10):
+def train_one_fold(model, train_loader, val_loader, optimizer, criterion, model_name, fold_idx, epochs=10, save_dir="results"):
     """
-    Executa o treinamento e validação para um único fold.
+    Executa o treinamento e validação para um único fold e salva as probabilidades.
     """
     model.to(DEVICE)
     history = {"train_loss": [], "val_loss": []}
+    os.makedirs(save_dir, exist_ok=True)
 
     for epoch in range(epochs):
         model.train()
@@ -58,13 +61,15 @@ def train_one_fold(model, train_loader, val_loader, optimizer, criterion, epochs
         print(f"📘 Época {epoch+1}/{epochs} | Loss treino: {train_loss:.4f} | Loss val: {val_loss:.4f}")
         print(f"➡️  ACC={acc*100:.2f}% | PREC={prec*100:.2f}% | REC={rec*100:.2f}% | F1={f1*100:.2f}% | AUC={auc*100:.2f}%")
 
+    np.save(f"{save_dir}/probs_{model_name}_fold{fold_idx}.npy", np.array(probs))
+    np.save(f"{save_dir}/gts_fold{fold_idx}.npy", np.array(gts))
+
     return model, (acc, prec, rec, f1, auc)
 
 
-def kfold_training(data_root="data", model_name="vit", k_fold=5, epochs=10, lr=1e-4, batch_size=32):
+def kfold_training(data_root="data", model_name="vit", k_fold=5, epochs=10, lr=1e-4, batch_size=32, save_dir="results"):
     """
-    Executa o treinamento com validação cruzada K-fold,
-    mostrando métricas por fold e resultados médios finais.
+    Executa o treinamento com validação cruzada K-fold para um modelo específico.
     """
     print(f"\n🚀 Iniciando K-Fold Training ({k_fold} folds) — Modelo: {model_name.upper()}\n")
     dataset = load_dataset(data_root, model_name)
@@ -83,7 +88,10 @@ def kfold_training(data_root="data", model_name="vit", k_fold=5, epochs=10, lr=1
         criterion = nn.CrossEntropyLoss()
         optimizer = torch.optim.AdamW(model.parameters(), lr=lr)
 
-        trained_model, metrics = train_one_fold(model, train_loader, val_loader, optimizer, criterion, epochs)
+        trained_model, metrics = train_one_fold(
+            model, train_loader, val_loader, optimizer, criterion,
+            model_name, fold_idx, epochs, save_dir
+        )
         all_metrics.append(metrics)
 
         acc, prec, rec, f1, auc = metrics
@@ -108,10 +116,36 @@ def kfold_training(data_root="data", model_name="vit", k_fold=5, epochs=10, lr=1
     return all_metrics
 
 
+def full_experiment(data_root="data", k_fold=5, epochs=10, lr=1e-4, batch_size=32):
+    """
+    Executa o experimento completo com todos os modelos Transformers.
+    (VIT, DEIT, BEIT, SWINV2)
+    """
+    models = ["vit", "deit", "beit", "swinv2"]
+    all_results = {}
+
+    for model_name in models:
+        print("\n" + "=" * 70)
+        print(f"🚀 Iniciando treinamento completo para {model_name.upper()}")
+        print("=" * 70)
+        results = kfold_training(
+            data_root=data_root,
+            model_name=model_name,
+            k_fold=k_fold,
+            epochs=epochs,
+            lr=lr,
+            batch_size=batch_size,
+            save_dir="results"
+        )
+        all_results[model_name] = results
+
+    print("\n🎯 Treinamento completo finalizado para todos os modelos!")
+    return all_results
+
+
 if __name__ == "__main__":
-    kfold_training(
+    full_experiment(
         data_root="data",
-        model_name="vit",
         k_fold=5,
         epochs=10,
         lr=1e-4,
