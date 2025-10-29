@@ -24,15 +24,9 @@ from torchvision import datasets, transforms
 
 def get_transforms(model_name: str):
     """
-    Retorna as transformações adequadas para o modelo especificado.
-
-    Parâmetros:
-        model_name (str): nome do modelo (ex: "vit", "swinv2", "beit", "deit")
-
-    Retorna:
-        transform (torchvision.transforms.Compose): transformações da imagem
+    Retorna transformações SEM ToTensor() e SEM Normalize()
+    O processor fará isso depois.
     """
-    # Define o tamanho padrão baseado no artigo
     input_size = {
         "swinv2": 256,
         "beit": 224,
@@ -44,11 +38,10 @@ def get_transforms(model_name: str):
         transforms.Resize((input_size, input_size)),
         transforms.RandomHorizontalFlip(p=0.5),
         transforms.RandomRotation(15),
-        transforms.ToTensor(),
-        transforms.Normalize([0.5], [0.5])  # Normalização padrão (canal único)
+        # NÃO adicionar ToTensor() aqui
+        # O processor fará a conversão e normalização
     ])
     return transform
-
 
 def load_dataset(data_root: str, model_name: str):
     """

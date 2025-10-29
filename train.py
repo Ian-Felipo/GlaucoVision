@@ -12,9 +12,21 @@ from model import load_transformer_model
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-def train_one_fold(model, train_loader, val_loader, optimizer, criterion, model_name, fold_idx, epochs=10, save_dir="results"):
+def train_one_fold(model, processor, train_loader, val_loader, optimizer, criterion, model_name, fold_idx, epochs=10, save_dir="results"):
     """
     Executa o treinamento e validação para um único fold e salva as probabilidades.
+    
+    Parâmetros:
+        model: modelo Transformer
+        processor: AutoImageProcessor do modelo (para normalização correta)
+        train_loader: DataLoader de treino
+        val_loader: DataLoader de validação
+        optimizer: otimizador
+        criterion: função de perda
+        model_name: nome do modelo
+        fold_idx: índice do fold atual
+        epochs: número de épocas
+        save_dir: diretório para salvar resultados
     """
     model.to(DEVICE)
     history = {"train_loss": [], "val_loss": []}
@@ -23,10 +35,14 @@ def train_one_fold(model, train_loader, val_loader, optimizer, criterion, model_
     for epoch in range(epochs):
         model.train()
         train_loss = 0.0
-        for imgs, labels in tqdm(train_loader, desc=f"Treinando (Época {epoch+1}/{epochs})", leave=False):
-            imgs, labels = imgs.to(DEVICE), labels.to(DEVICE)
+        
+        for imgs, labels in train_loader:
+            imgs_processed = processor(images=imgs, return_tensors="pt")
+            pixel_values = imgs_processed['pixel_values'].to(DEVICE)
+            labels = labels.to(DEVICE)
+                    
             optimizer.zero_grad()
-            outputs = model(imgs).logits
+            outputs = model(pixel_values=pixel_values).logits
             loss = criterion(outputs, labels)
             loss.backward()
             optimizer.step()
@@ -35,15 +51,21 @@ def train_one_fold(model, train_loader, val_loader, optimizer, criterion, model_
         train_loss /= len(train_loader)
         history["train_loss"].append(train_loss)
 
+        # Validação
         model.eval()
         val_loss = 0.0
         preds, probs, gts = [], [], []
+        
         with torch.no_grad():
             for imgs, labels in val_loader:
-                imgs, labels = imgs.to(DEVICE), labels.to(DEVICE)
-                outputs = model(imgs).logits
+                imgs_processed = processor(images=imgs, return_tensors="pt")
+                pixel_values = imgs_processed['pixel_values'].to(DEVICE)
+                labels = labels.to(DEVICE)
+                
+                outputs = model(pixel_values=pixel_values).logits
                 loss = criterion(outputs, labels)
                 val_loss += loss.item()
+                
                 pred = torch.argmax(outputs, dim=1)
                 preds.extend(pred.cpu().numpy())
                 probs.extend(torch.softmax(outputs, dim=1)[:, 1].cpu().numpy())
@@ -53,15 +75,14 @@ def train_one_fold(model, train_loader, val_loader, optimizer, criterion, model_
         history["val_loss"].append(val_loss)
 
         acc = accuracy_score(gts, preds)
-        prec = precision_score(gts, preds)
-        rec = recall_score(gts, preds)
-        f1 = f1_score(gts, preds)
+        prec = precision_score(gts, preds, zero_division=0)
+        rec = recall_score(gts, preds, zero_division=0)
+        f1 = f1_score(gts, preds, zero_division=0)
         auc = roc_auc_score(gts, probs)
 
         print(f"📘 Época {epoch+1}/{epochs} | Loss treino: {train_loss:.4f} | Loss val: {val_loss:.4f}")
         print(f"➡️  ACC={acc*100:.2f}% | PREC={prec*100:.2f}% | REC={rec*100:.2f}% | F1={f1*100:.2f}% | AUC={auc*100:.2f}%")
 
-    # Salva probabilidades e ground truths
     np.save(f"{save_dir}/probs_{model_name}_fold{fold_idx}.npy", np.array(probs))
     np.save(f"{save_dir}/gts_fold{fold_idx}.npy", np.array(gts))
 
@@ -90,14 +111,14 @@ def kfold_training(data_root="data", model_name="vit", k_fold=5, epochs=10, lr=1
             f.write(f"🔹 FOLD {fold_idx}/{k_fold}\n")
             f.write(f"==============================\n")
 
-            _, model = load_transformer_model(model_name, num_classes=2)
+            processor, model = load_transformer_model(model_name, num_classes=2)
             model.to(DEVICE)
 
             criterion = nn.CrossEntropyLoss()
             optimizer = torch.optim.AdamW(model.parameters(), lr=lr)
 
             trained_model, metrics = train_one_fold(
-                model, train_loader, val_loader, optimizer, criterion,
+                model, processor, train_loader, val_loader, optimizer, criterion,
                 model_name, fold_idx, epochs, save_dir
             )
             all_metrics.append(metrics)
@@ -155,7 +176,7 @@ if __name__ == "__main__":
     full_experiment(
         data_root="data",
         k_fold=5,
-        epochs=10,
+        epochs=15,
         lr=1e-4,
         batch_size=16
     )
