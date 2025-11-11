@@ -12,6 +12,23 @@ from model import load_transformer_model
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
+def create_collate_fn(processor):
+    """
+    Cria uma função collate customizada que processa imagens PIL com o processor.
+    """
+    def collate_fn(batch):
+        images = [item[0] for item in batch]
+        labels = torch.tensor([item[1] for item in batch], dtype=torch.long)
+        
+        # Processa as imagens com o processor
+        processed = processor(images=images, return_tensors="pt")
+        pixel_values = processed['pixel_values']
+        
+        return pixel_values, labels
+    
+    return collate_fn
+
+
 def train_one_fold(model, processor, train_loader, val_loader, optimizer, criterion, model_name, fold_idx, epochs=10, save_dir="results"):
     """
     Executa o treinamento e validação para um único fold e salva as probabilidades.
@@ -36,9 +53,8 @@ def train_one_fold(model, processor, train_loader, val_loader, optimizer, criter
         model.train()
         train_loss = 0.0
         
-        for imgs, labels in train_loader:
-            imgs_processed = processor(images=imgs, return_tensors="pt")
-            pixel_values = imgs_processed['pixel_values'].to(DEVICE)
+        for pixel_values, labels in train_loader:
+            pixel_values = pixel_values.to(DEVICE)
             labels = labels.to(DEVICE)
                     
             optimizer.zero_grad()
@@ -57,9 +73,8 @@ def train_one_fold(model, processor, train_loader, val_loader, optimizer, criter
         preds, probs, gts = [], [], []
         
         with torch.no_grad():
-            for imgs, labels in val_loader:
-                imgs_processed = processor(images=imgs, return_tensors="pt")
-                pixel_values = imgs_processed['pixel_values'].to(DEVICE)
+            for pixel_values, labels in val_loader:
+                pixel_values = pixel_values.to(DEVICE)
                 labels = labels.to(DEVICE)
                 
                 outputs = model(pixel_values=pixel_values).logits
@@ -95,15 +110,24 @@ def kfold_training(data_root="data", model_name="vit", k_fold=5, epochs=10, lr=1
     e salva os resultados em um arquivo TXT.
     """
     print(f"\n🚀 Iniciando K-Fold Training ({k_fold} folds) — Modelo: {model_name.upper()}\n")
+    
+    # Carrega o processor ANTES de criar os DataLoaders
+    processor, _ = load_transformer_model(model_name, num_classes=2)
+    
     dataset = load_dataset(data_root, model_name)
-    folds = create_kfold_loaders(dataset, k_fold=k_fold, batch_size=batch_size)
+    folds = create_kfold_loaders(
+        dataset, 
+        k_fold=k_fold, 
+        batch_size=batch_size,
+        collate_fn=create_collate_fn(processor)  # ✅ Adiciona collate_fn customizado
+    )
 
     os.makedirs(save_dir, exist_ok=True)
     txt_file_path = os.path.join(save_dir, f"results_{model_name}.txt")
 
     all_metrics = []
 
-    with open(txt_file_path, "w") as f:
+    with open(txt_file_path, "w", encoding='utf-8') as f:
         f.write(f"📊 Resultados K-Fold ({k_fold} folds) — Modelo: {model_name.upper()}\n\n")
 
         for fold_idx, (train_loader, val_loader) in enumerate(folds, start=1):
@@ -111,7 +135,8 @@ def kfold_training(data_root="data", model_name="vit", k_fold=5, epochs=10, lr=1
             f.write(f"🔹 FOLD {fold_idx}/{k_fold}\n")
             f.write(f"==============================\n")
 
-            processor, model = load_transformer_model(model_name, num_classes=2)
+            # Recarrega o modelo para cada fold
+            _, model = load_transformer_model(model_name, num_classes=2)
             model.to(DEVICE)
 
             criterion = nn.CrossEntropyLoss()
