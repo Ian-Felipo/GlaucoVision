@@ -3,51 +3,51 @@
 ==============================
 🔹 FOLD 1/5
 ==============================
-Accuracy:     85.50%
-Precision:    79.18%
-Recall:       96.52%
-F1-Score:     87.00%
-AUC:          95.79%
+Accuracy:     90.75%
+Precision:    90.59%
+Recall:       91.04%
+F1-Score:     90.82%
+AUC:          96.84%
 
 ==============================
 🔹 FOLD 2/5
 ==============================
-Accuracy:     81.50%
-Precision:    74.60%
-Recall:       94.39%
-F1-Score:     83.33%
-AUC:          95.13%
+Accuracy:     88.00%
+Precision:    91.57%
+Recall:       83.16%
+F1-Score:     87.17%
+AUC:          95.38%
 
 ==============================
 🔹 FOLD 3/5
 ==============================
-Accuracy:     91.00%
-Precision:    91.76%
-Recall:       88.83%
-F1-Score:     90.27%
-AUC:          97.60%
+Accuracy:     92.50%
+Precision:    89.90%
+Recall:       94.68%
+F1-Score:     92.23%
+AUC:          98.33%
 
 ==============================
 🔹 FOLD 4/5
 ==============================
-Accuracy:     92.25%
-Precision:    90.29%
-Recall:       94.42%
-F1-Score:     92.31%
-AUC:          97.02%
+Accuracy:     85.75%
+Precision:    94.30%
+Recall:       75.63%
+F1-Score:     83.94%
+AUC:          95.34%
 
 ==============================
 🔹 FOLD 5/5
 ==============================
-Accuracy:     85.50%
-Precision:    81.75%
-Recall:       94.50%
-F1-Score:     87.66%
-AUC:          95.19%
+Accuracy:     84.75%
+Precision:    87.92%
+Recall:       83.49%
+F1-Score:     85.65%
+AUC:          92.23%
 
 ✅ MÉDIA FINAL (BEIT — 5 folds):
-Accuracy:     87.15% ± 3.95%
-Precision:    83.52% ± 6.56%
-Recall:       93.73% ± 2.58%
-F1-Score:     88.11% ± 3.05%
-AUC:          96.15% ± 0.99%
+Accuracy:     88.35% ± 2.93%
+Precision:    90.86% ± 2.10%
+Recall:       85.60% ± 6.66%
+F1-Score:     87.96% ± 3.11%
+AUC:          95.62% ± 2.02%
