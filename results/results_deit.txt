@@ -3,51 +3,51 @@
 ==============================
 🔹 FOLD 1/5
 ==============================
-Accuracy:     88.75%
-Precision:    94.83%
-Recall:       82.09%
-F1-Score:     88.00%
-AUC:          96.53%
+Accuracy:     89.75%
+Precision:    87.04%
+Recall:       93.53%
+F1-Score:     90.17%
+AUC:          96.24%
 
 ==============================
 🔹 FOLD 2/5
 ==============================
-Accuracy:     88.75%
-Precision:    83.26%
-Recall:       96.43%
-F1-Score:     89.36%
-AUC:          97.06%
+Accuracy:     90.50%
+Precision:    86.57%
+Recall:       95.41%
+F1-Score:     90.78%
+AUC:          96.82%
 
 ==============================
 🔹 FOLD 3/5
 ==============================
-Accuracy:     94.50%
-Precision:    96.63%
-Recall:       91.49%
-F1-Score:     93.99%
-AUC:          98.26%
+Accuracy:     93.50%
+Precision:    93.09%
+Recall:       93.09%
+F1-Score:     93.09%
+AUC:          97.25%
 
 ==============================
 🔹 FOLD 4/5
 ==============================
-Accuracy:     89.50%
-Precision:    91.89%
-Recall:       86.29%
-F1-Score:     89.01%
-AUC:          96.25%
+Accuracy:     91.00%
+Precision:    88.89%
+Recall:       93.40%
+F1-Score:     91.09%
+AUC:          96.73%
 
 ==============================
 🔹 FOLD 5/5
 ==============================
 Accuracy:     89.00%
-Precision:    92.23%
-Recall:       87.16%
-F1-Score:     89.62%
-AUC:          96.04%
+Precision:    85.66%
+Recall:       95.87%
+F1-Score:     90.48%
+AUC:          96.99%
 
 ✅ MÉDIA FINAL (DEIT — 5 folds):
-Accuracy:     90.10% ± 2.22%
-Precision:    91.77% ± 4.60%
-Recall:       88.69% ± 4.89%
-F1-Score:     90.00% ± 2.07%
-AUC:          96.83% ± 0.79%
+Accuracy:     90.75% ± 1.53%
+Precision:    88.25% ± 2.64%
+Recall:       94.26% ± 1.15%
+F1-Score:     91.12% ± 1.03%
+AUC:          96.81% ± 0.33%

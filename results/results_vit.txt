@@ -3,51 +3,51 @@
 ==============================
 🔹 FOLD 1/5
 ==============================
-Accuracy:     88.25%
-Precision:    83.19%
-Recall:       96.02%
-F1-Score:     89.15%
-AUC:          97.29%
+Accuracy:     90.25%
+Precision:    93.55%
+Recall:       86.57%
+F1-Score:     89.92%
+AUC:          97.12%
 
 ==============================
 🔹 FOLD 2/5
 ==============================
-Accuracy:     87.25%
-Precision:    88.36%
-Recall:       85.20%
-F1-Score:     86.75%
-AUC:          95.08%
+Accuracy:     91.75%
+Precision:    94.05%
+Recall:       88.78%
+F1-Score:     91.34%
+AUC:          97.52%
 
 ==============================
 🔹 FOLD 3/5
 ==============================
-Accuracy:     93.00%
-Precision:    90.00%
-Recall:       95.74%
-F1-Score:     92.78%
-AUC:          98.42%
+Accuracy:     94.75%
+Precision:    93.72%
+Recall:       95.21%
+F1-Score:     94.46%
+AUC:          98.31%
 
 ==============================
 🔹 FOLD 4/5
 ==============================
-Accuracy:     91.00%
-Precision:    90.05%
-Recall:       91.88%
-F1-Score:     90.95%
-AUC:          96.76%
+Accuracy:     89.25%
+Precision:    84.38%
+Recall:       95.94%
+F1-Score:     89.79%
+AUC:          96.81%
 
 ==============================
 🔹 FOLD 5/5
 ==============================
-Accuracy:     90.75%
-Precision:    95.48%
-Recall:       87.16%
-F1-Score:     91.13%
-AUC:          97.24%
+Accuracy:     89.50%
+Precision:    94.00%
+Recall:       86.24%
+F1-Score:     89.95%
+AUC:          96.93%
 
 ✅ MÉDIA FINAL (VIT — 5 folds):
-Accuracy:     90.05% ± 2.06%
-Precision:    89.42% ± 3.93%
-Recall:       91.20% ± 4.40%
-F1-Score:     90.15% ± 2.05%
-AUC:          96.96% ± 1.09%
+Accuracy:     91.10% ± 2.02%
+Precision:    91.94% ± 3.79%
+Recall:       90.55% ± 4.20%
+F1-Score:     91.09% ± 1.78%
+AUC:          97.34% ± 0.54%
